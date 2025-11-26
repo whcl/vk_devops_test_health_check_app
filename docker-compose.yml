@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  fastapi-app:
+    build: ./fastApiProject  # Сборка образа из папки fastApiProject
+    container_name: vk_devops_test  
+    ports:
+      - "8000:8000"  
+    networks:
+      - app-network  
+    environment:
+      - PORT=8000 
+
+  health-checker:
+    build: ./HealthChecker  # Сборка образа из папки HealthChecker
+    container_name: health_checker  
+    depends_on:
+      - fastapi-app  # Зависимость от сервиса fastapi-app
+    networks:
+      - app-network  
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock  # Доступ к Docker socket для управления контейнерами
+    environment:
+      - APP_NAME=vk_devops_test  # Имя приложения для мониторинга
+      - HEALTH_CHECK_INTERVAL=5  # Интервал проверки статуса приложения (секунды)
+      - APP_PORT=8000  # Порт приложения для проверки
+    restart: unless-stopped  # Автоперезапуск при падении
+
+networks:
+  app-network:
+    driver: bridge 
